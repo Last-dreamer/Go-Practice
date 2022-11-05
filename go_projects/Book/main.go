@@ -6,17 +6,15 @@ import (
 	"log"
 	"net/http"
 
-	"os"
+	"Book/controllers"
+	"Book/driver"
+	"Book/model"
 
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
 	"github.com/subosito/gotenv"
-	// "strconv"
 )
 
-
-
-var allBooks  []Book
+var allBooks  []model.Book
 var db *sql.DB
 
 func init(){
@@ -29,22 +27,16 @@ func logFetal(err error){
 		log.Fatal(err)
 	}
 }
+
+
 func main() {
 
-	pgUrl, err := pq.ParseURL(os.Getenv("SQL_URL"))
-	logFetal(err)
+	db := driver.ConnectDB()
+	controller := controllers.Controller{}
 
-	db, err = sql.Open("postgres",pgUrl)
-	logFetal(err)
-
-	// log.Println(db)
-	err = db.Ping()
-	logFetal(err)
-
-	log.Println(pgUrl)
 	router := mux.NewRouter()
 
-	router.HandleFunc("/getBooks", getBooks).Methods("GET")
+	router.HandleFunc("/getBooks", controller.GetBooks(db)).Methods("GET")
 	router.HandleFunc("/getBook/{id}", getBook).Methods("GET")
 	router.HandleFunc("/updateBook", updateBook).Methods("PUT")
 	router.HandleFunc("/addNewBook", addNewBook).Methods("POST")
@@ -67,7 +59,7 @@ func removeBook(w http.ResponseWriter, r *http.Request){
 
 
 func updateBook(w http.ResponseWriter, r *http.Request){
-	var book Book
+	var book model.Book
 	json.NewDecoder(r.Body).Decode(&book)
 
   result, _ := db.Exec("update books set title=$1, author=$2, year=$3 where id=$4", &book.Title, &book.Author, &book.Year, &book.ID)
@@ -80,7 +72,7 @@ func updateBook(w http.ResponseWriter, r *http.Request){
 }
 
 func getBook(w http.ResponseWriter, r *http.Request){
-  var book Book
+  var book model.Book
   params := mux.Vars(r)
 
   rows := db.QueryRow("select * from books where id=$1", params["id"])
@@ -92,31 +84,13 @@ func getBook(w http.ResponseWriter, r *http.Request){
 }
 
 func addNewBook(w http.ResponseWriter, r *http.Request) {
-var book Book
+var book model.Book
 var bookID int
 json.NewDecoder(r.Body).Decode(&book)
 
 err := db.QueryRow("insert into books(title, author, year) values($1, $2, $3) RETURNING id;",book.Title, book.Author, book.Year).Scan(&bookID)
 
 logFetal(err)
-
 json.NewEncoder(w).Encode(bookID)
-
 }
 
-func getBooks(w http.ResponseWriter, r *http.Request) {
-	var book Book
-	allBooks = []Book{}
-
-	rows, err := db.Query("SELECT * FROM books")
-	logFetal(err)
-
-	for rows.Next() {
-		err = rows.Scan(&book.ID, &book.Title, &book.Author, &book.Year)
-		logFetal(err)
-
-		allBooks = append(allBooks, book)
-	}
-
-	json.NewEncoder(w).Encode(allBooks)
-}
