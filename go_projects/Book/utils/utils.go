@@ -6,11 +6,11 @@ import (
 	"net/http"
 )
 
-func sendError(w http.ResponseWriter, status int, err model.Error){
+func SendError(w http.ResponseWriter, status int, err model.Error){
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(err)
 }
 
-func sendSuccess(w http.ResponseWriter, data interface{}){
+func SendSuccess(w http.ResponseWriter, data interface{}){
 	json.NewEncoder(w).Encode(data);
 }

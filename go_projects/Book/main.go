@@ -37,7 +37,7 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/getBooks", controller.GetBooks(db)).Methods("GET")
-	router.HandleFunc("/getBook/{id}", getBook).Methods("GET")
+	router.HandleFunc("/getBook/{id}", controller.GetBook(db)).Methods("GET")
 	router.HandleFunc("/updateBook", updateBook).Methods("PUT")
 	router.HandleFunc("/addNewBook", addNewBook).Methods("POST")
 	router.HandleFunc("/deleteBook/{id}", removeBook).Methods("DELETE")
@@ -68,19 +68,10 @@ func updateBook(w http.ResponseWriter, r *http.Request){
   logFetal(err)
 
   json.NewEncoder(w).Encode(rowsUpdate)
-
 }
 
 func getBook(w http.ResponseWriter, r *http.Request){
-  var book model.Book
-  params := mux.Vars(r)
-
-  rows := db.QueryRow("select * from books where id=$1", params["id"])
-
-  err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.Year)
-  logFetal(err)
-
-  json.NewEncoder(w).Encode(book)
+ 
 }
 
 func addNewBook(w http.ResponseWriter, r *http.Request) {
@@ -93,4 +84,5 @@ err := db.QueryRow("insert into books(title, author, year) values($1, $2, $3) RE
 logFetal(err)
 json.NewEncoder(w).Encode(bookID)
 }
+
 

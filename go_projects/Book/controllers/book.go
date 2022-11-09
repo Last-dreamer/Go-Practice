@@ -2,10 +2,14 @@ package controllers
 
 import (
 	"Book/model"
+	bookRepository "Book/repository/book"
+	"Book/utils"
 	"database/sql"
-	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type Controller struct {}
@@ -17,19 +21,52 @@ func (c Controller) GetBooks(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book model.Book
 		allBooks = []model.Book{}
-	
-		rows, err := db.Query("SELECT * FROM books")
-		logFetal(err)
-	
-		for rows.Next() {
-			err = rows.Scan(&book.ID, &book.Title, &book.Author, &book.Year)
-			logFetal(err)
-			allBooks = append(allBooks, book)
-		}
-		json.NewEncoder(w).Encode(allBooks)
+		var error model.Error
+		
+	   getBooks := bookRepository.BookRepository{}
+	   getAllBooks, err :=	getBooks.GetBooks(db, book, allBooks)
+
+	   if err != nil {
+		   error.Message  = "Server Error"
+		   utils.SendError(w, http.StatusInternalServerError, error)
+		   return
+	   }
+
+	   w.Header().Set("Content-Type", "application/json")
+	   utils.SendSuccess(w,getAllBooks)
 	}
 }
 
+
+func (c Controller) GetBook(db *sql.DB) http.HandlerFunc {
+	
+	return func(w http.ResponseWriter, r *http.Request) {
+		var book model.Book
+		params := mux.Vars(r)
+		var error model.Error
+	    bookRepo := bookRepository.BookRepository{}
+
+	   id, _ := strconv.Atoi(params["id"])
+
+		getBook, err := bookRepo.GetBook(db, book, id)
+		
+		if err != nil {
+			if err == sql.ErrNoRows {
+				error.Message = "No Book Found"
+			    utils.SendError(w, http.StatusNotFound, error)
+				return
+			}else{
+				error.Message = "Server Error"
+				utils.SendError(w, http.StatusInternalServerError, error)
+				return 
+			}
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		utils.SendSuccess(w, getBook)
+	 
+	}
+}
 
 func logFetal(err error) {
 	if err != nil {
