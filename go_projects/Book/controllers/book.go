@@ -13,15 +13,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Controller struct {}
-
-
-var allBooks  []model.Book
+type Controller struct {} 
 
 func (c Controller) GetBooks(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var book model.Book
-		allBooks = []model.Book{}
+		allBooks := []model.Book{}
 		var error model.Error
 		
 	   getBooks := bookRepository.BookRepository{}
@@ -75,7 +72,7 @@ func (c Controller) AddBook(db *sql.DB) http.HandlerFunc {
 		var bookID int
 		var error model.Error
 		json.NewDecoder(r.Body).Decode(&book)
-		 bookRepo := bookRepository.BookRepository{}
+		bookRepo := bookRepository.BookRepository{}
 
 		err := bookRepo.AddBook(db, book, bookID)
 		if err != nil {

@@ -8,13 +8,12 @@ import (
 
 	"Book/controllers"
 	"Book/driver"
-	"Book/model"
 
 	"github.com/gorilla/mux"
 	"github.com/subosito/gotenv"
 )
 
-var allBooks  []model.Book
+ 
 var db *sql.DB
 
 func init(){

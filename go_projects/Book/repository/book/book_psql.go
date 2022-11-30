@@ -45,9 +45,8 @@ func (b BookRepository) AddBook(db * sql.DB, book model.Book, bookID int) error 
 }
 
 func (b BookRepository) UpdateBook(db *sql.DB, book model.Book) (int , error) {
-
+	
 	result, _ := db.Exec("update books set title=$1, author=$2, year=$3 where id=$4", &book.Title, &book.Author, &book.Year, &book.ID)
-
 	_, err := result.RowsAffected()
 	if err != nil {
 		return 0 , err
